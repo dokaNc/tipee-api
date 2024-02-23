@@ -4,11 +4,10 @@ namespace App\Controller;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\Request;
-
-use App\Entity\Project;
 use App\Service\ProjectManager;
+use App\Form\ProjectType;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class ProjectController extends AbstractController {
 
@@ -22,17 +21,17 @@ class ProjectController extends AbstractController {
     /**
      * @Route("/projects", methods={"POST"})
      */
-    public function postProject(Request $request): JsonResponse
+    public function postProject(Request $request, NormalizerInterface $normalizer): JsonResponse
     {
         $project = $this->projectManager->createProject();
-        $form = $this->createFormBuilder($project)
-            ->add('name', TextType::class)
-            ->add('slug', TextType::class)
-            ->getForm();
-        $form->handleRequest($request);
+        $form = $this->createForm(ProjectType::class, $project);
+        $form->submit(json_decode($request->getContent(), true));
+        
         if ($form->isSubmitted() && $form->isValid()) {
-            return $this->json($project->serialize());
+            $normalized = $normalizer->normalize($form->getData(), 'json');
+            return $this->json($normalized, JsonResponse::HTTP_CREATED);
         }
-        return $this->json(["error" => "An error occured"]);
+
+        return $this->json("An error occured. Syntax or content is invalid", JsonResponse::HTTP_BAD_REQUEST);
     }
 }

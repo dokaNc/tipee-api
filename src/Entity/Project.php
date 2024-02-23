@@ -2,14 +2,21 @@
 
 namespace App\Entity;
 
+use Symfony\Component\Validator\Constraints as Assert;
 
 class Project
 {
     
     private $id;
 
+    /**
+     * @Assert\NotNull
+     */
     private $name;
-
+    
+    /**
+     * @Assert\NotNull
+     */
     private $slug;
 
     public function getId(): ?int
